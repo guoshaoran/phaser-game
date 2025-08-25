@@ -1,0 +1,47 @@
+[
+  {
+    "question": "李中梓在《本草通玄》中如何评价崇明薄荷？",
+    "options": [
+      { "text": "气香烈，通九窍（《本草纲目》引）", "correct": false },
+      { "text": "叶大如钱，可生食（《松江府志》）", "correct": false },
+      { "text": "辛凉透达，冠绝江南（上图藏本卷四）", "correct": true }
+    ],
+    "knowledge": "上海图书馆藏明刻本第78页：'崇明湿地所产薄荷，辛凉透达之性冠绝江南'"
+  },
+  {
+    "question": "龙华寺《急救仙方》记载的辟疫香囊需悬挂何处？",
+    "options": [
+      { "text": "佩于心前（龙华寺残卷）", "correct": true },
+      { "text": "悬于门楣（《沪上药物志》）", "correct": false },
+      { "text": "置枕畔（《炮炙大法》）", "correct": false }
+    ],
+    "knowledge": "上海图书馆数字文献库SHG-1023号：'素纱裹药，佩于心前，疫气不侵'"
+  },
+  {
+    "question": "缪希雍在《炮炙大法》中要求蟾酥切制厚度？",
+    "options": [
+      { "text": "厚如钱唇（《雷允上丸散集》）", "correct": false },
+      { "text": "薄映日光，方见纹理（国图藏明刻本）", "correct": true },
+      { "text": "三分为准（《本草通玄》）", "correct": false }
+    ],
+    "knowledge": "上海图书馆影印本第56页注：'蟾酥薄切需透光见理，此雷允上秘技'"
+  },
+  {
+    "question": "松江珍珠在明代的主要用途是？",
+    "options": [
+      { "text": "首饰镶嵌（《上海通志》）", "correct": false },
+      { "text": "入药安神，兼调丹青（府志物产卷）", "correct": true },
+      { "text": "贡品赏玩（《嘉靖实录》）", "correct": false }
+    ],
+    "knowledge": "上海方志馆藏清刻本：'松江珠粉，医家入安神方，画工调色亦用之'"
+  },
+  {
+    "question": "1938年《沪上药物志》记载的真麝香特征？",
+    "options": [
+      { "text": "囊孔密如金粟（药行公会版）", "correct": true },
+      { "text": "遇水沉底（《本草纲目》）", "correct": false },
+      { "text": "火烧现蓝焰（民间验方）", "correct": false }
+    ],
+    "knowledge": ""
+  }
+]

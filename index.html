@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字冒险游戏</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Microsoft YaHei', sans-serif;
+            overflow: hidden;
+        }
+        #game-container {
+            border: 2px solid #2a3b4d;
+            box-shadow: 0 0 20px rgba(0, 100, 200, 0.5);
+            border-radius: 5px;
+        }
+        .game-title {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 150, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    
+    <!-- 工具类 -->
+    <script src="src/utils/AssetLoader.js"></script>
+    <script src="src/utils/Dialog.js"></script>
+    
+    <!-- 场景类 -->
+    <script src="src/scenes/BootScene.js"></script>
+    <script src="src/scenes/MenuScene.js"></script>
+    <script src="src/scenes/Scene1.js"></script>
+    <script src="src/scenes/Scene2.js"></script>
+    <script src="src/scenes/Scene3.js"></script>
+    <script src="src/scenes/Scene4.js"></script>
+    <script src="src/scenes/Scene4Scan.js"></script>
+    <script src="src/scenes/Scene4AfterScan.js"></script>
+    <script src="src/scenes/MiniGame1.js"></script>
+    <script src="src/scenes/MiniGame2.js"></script>
+    <script src="src/scenes/MiniGame3.js"></script>
+    <script src="src/scenes/MiniGame4.js"></script>
+    
+    <!-- 主程序 -->
+    <script src="main.js"></script>
+</body>
+</html>
