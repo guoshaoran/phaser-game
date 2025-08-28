@@ -5,7 +5,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#000',
-    scene: [BootScene, MenuScene, Scene1, Scene2,Scene3,Scene4,Scene4Scan,Scene4AfterScan, MiniGame1, MiniGame2, MiniGame3, MiniGame4],
+    scene: [BootScene, MenuScene,StartScene,Scene1, Scene2,Scene3,Scene4,Scene4Scan,Scene4AfterScan, MiniGame1, MiniGame2, MiniGame3, MiniGame4,BookScene ,PersonScene,HomeScene],
     input: {
         mouse: true,
         touch: true

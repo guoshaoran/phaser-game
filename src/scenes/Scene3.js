@@ -2,7 +2,7 @@ class Scene3 extends Phaser.Scene {
     constructor() {
         super({ key: 'Scene3' });
     }
-    
+
     create() {
 
         const { width, height } = this.sys.game.config;
@@ -16,18 +16,18 @@ class Scene3 extends Phaser.Scene {
 
         // 添加NPC
         this.npc = this.add.image(600, 500, 'npc1').setScale(0.2).setInteractive();
-        
+
         // NPC悬停效果
         this.npc.on('pointerover', () => {
             this.npc.setScale(0.25);
 
         });
-        
+
         this.npc.on('pointerout', () => {
             this.npc.setScale(0.2);
             this.npc.clearTint();
         });
-        
+
         // NPC点击事件
         this.npc.on('pointerdown', () => {
             const dialog = new Dialog(this);
@@ -39,12 +39,12 @@ class Scene3 extends Phaser.Scene {
                 this.scene.start('MiniGame2');
             });
         });
-        
+
         // 添加提示文本
         this.add.text(
-            600, 
+            600,
             400,
-            '点击NPC', 
+            '点击NPC',
             { fontSize: '16px', fill: '#fff', backgroundColor: '#000' }
         ).setOrigin(0.5);
     }

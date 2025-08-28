@@ -3,12 +3,6 @@ class MiniGame3 extends Phaser.Scene {
         super({ key: 'MiniGame3' });
     }
 
-    preload() {
-        // 确保拼图图片已加载
-        this.load.image('background5', 'path/to/background5.png');
-        this.load.image('puzzle_full', 'path/to/puzzle.png');
-    }
-
     create() {
         const { width, height } = this.sys.game.config;
 
@@ -16,35 +10,35 @@ class MiniGame3 extends Phaser.Scene {
         this.background = this.add.image(width / 2, height / 2, 'background5');
         this.background.setDisplaySize(width, height);
 
-        // 添加说明文字
-        this.add.text(width / 2, 50, '完成拼图游戏', { fontSize: '32px', color: '#000' })
-            .setOrigin(0.5);
+        // 弹出提示对话框
+        const startDialog = new Dialog(this);
+        startDialog.show([
+            "第三关：云巅解偈",
+            "请拼合悬浮的绢布碎片"
+        ], () => {
+            this.setupPuzzleArea();
+            this.createPieces();
+            this.createQuestionTip();
+        });
+    }
 
-        // 拼图设置
+    setupPuzzleArea() {
+        const { width, height } = this.sys.game.config;
         this.rows = 2;
         this.cols = 2;
 
-        // 拼图区域占屏幕比例
-        this.puzzleAreaWidth = width * 0.5;
-        this.puzzleAreaHeight = height * 0.4;
+        this.puzzleAreaWidth = 400;
+        this.puzzleAreaHeight = 400;
 
-        this.pieceWidth = this.puzzleAreaWidth / this.cols;
-        this.pieceHeight = this.puzzleAreaHeight / this.rows;
+        this.pieceWidth = 200;
+        this.pieceHeight = 200;
 
-        this.puzzleAreaX = width / 2 - this.puzzleAreaWidth / 2;
-        this.puzzleAreaY = height / 2 - this.puzzleAreaHeight / 2;
+        this.puzzleAreaX = width - this.puzzleAreaWidth - 50; // 右下角
+        this.puzzleAreaY = height - this.puzzleAreaHeight - 50;
 
         // 绘制灰色方框
-        this.drawPuzzleTargets();
-
-        // 创建碎片
-        this.createPuzzle('puzzle_full');
-    }
-
-    drawPuzzleTargets() {
         const graphics = this.add.graphics();
         graphics.lineStyle(3, 0x999999);
-
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 const x = this.puzzleAreaX + col * this.pieceWidth + this.pieceWidth / 2;
@@ -59,105 +53,135 @@ class MiniGame3 extends Phaser.Scene {
         }
     }
 
-            createPuzzle(key) {
-            this.pieces = [];
+    createPieces() {
+        const { width, height } = this.sys.game.config;
+        this.pieces = [];
 
-            const texture = this.textures.get(key);
-            if (!texture) {
-                console.error('Texture not found:', key);
-                return;
+        const positions = [
+            { key: 'piece1', x: 100, y: height - 400 },
+            { key: 'piece2', x: 450, y: height - 400 },
+            { key: 'piece3', x: 100, y: height - 100 },
+            { key: 'piece4', x: 450, y: height - 100 },
+        ];
+
+        positions.forEach(pos => {
+            const piece = this.add.image(pos.x, pos.y, pos.key)
+                .setDisplaySize(this.pieceWidth, this.pieceHeight)
+                .setInteractive({ draggable: true })
+                .setData('key', pos.key)
+                .setData('placed', false);
+
+            // 目标位置绑定到灰色方框
+            let targetX = this.puzzleAreaX;
+            let targetY = this.puzzleAreaY;
+            switch(pos.key) {
+                case 'piece1': targetX += 0; targetY += 0; break;
+                case 'piece2': targetX += 200; targetY += 0; break;
+                case 'piece3': targetX += 0; targetY += 200; break;
+                case 'piece4': targetX += 200; targetY += 200; break;
             }
+            piece.setData('targetX', targetX + this.pieceWidth / 2);
+            piece.setData('targetY', targetY + this.pieceHeight / 2);
 
-            const img = texture.getSourceImage();
-            if (!img) {
-                console.error('Image source not found for key:', key);
-                return;
+            this.input.setDraggable(piece);
+            this.pieces.push(piece);
+        });
+
+        // 拖拽事件
+        this.input.on('drag', (pointer, piece, dragX, dragY) => {
+            if (!piece.getData('placed')) {
+                piece.x = dragX;
+                piece.y = dragY;
             }
+        });
 
-            const imgWidth = img.width;
-            const imgHeight = img.height;
-
-            // 先计算整体缩放比例，让图片铺满灰色边框区域
-            const scaleX = this.puzzleAreaWidth / imgWidth;
-            const scaleY = this.puzzleAreaHeight / imgHeight;
-
-            // 将整体图片缩放到目标区域大小
-            const scaledWidth = imgWidth * scaleX;
-            const scaledHeight = imgHeight * scaleY;
-
-            // 每块拼图的尺寸
-            const pieceWidth = scaledWidth / this.cols;
-            const pieceHeight = scaledHeight / this.rows;
-
-            for (let row = 0; row < this.rows; row++) {
-                for (let col = 0; col < this.cols; col++) {
-                    const targetX = this.puzzleAreaX + col * pieceWidth + pieceWidth / 2;
-                    const targetY = this.puzzleAreaY + row * pieceHeight + pieceHeight / 2;
-
-                    // 随机起始位置
-                    const startX = Phaser.Math.Between(50, this.sys.game.config.width - 50);
-                    const startY = Phaser.Math.Between(150, this.sys.game.config.height - 50);
-
-                    // 计算原图上对应裁剪区域
-                    const cropWidth = imgWidth / this.cols;
-                    const cropHeight = imgHeight / this.rows;
-                    const cropX = col * cropWidth;
-                    const cropY = row * cropHeight;
-
-                    const piece = this.add.image(startX, startY, key)
-                        .setDisplaySize(pieceWidth, pieceHeight) // 先按目标大小显示
-                        .setCrop(cropX, cropY, cropWidth, cropHeight) // 再裁剪原图块
-                        .setInteractive({ draggable: true })
-                        .setData('correctX', targetX)
-                        .setData('correctY', targetY)
-                        .setData('placed', false);
-
-                    this.input.setDraggable(piece);
-                    this.pieces.push(piece);
-                }
+        this.input.on('dragend', (pointer, piece) => {
+            const targetX = piece.getData('targetX');
+            const targetY = piece.getData('targetY');
+            const dist = Phaser.Math.Distance.Between(piece.x, piece.y, targetX, targetY);
+            if (dist < 20) {
+                piece.x = targetX;
+                piece.y = targetY;
+                piece.setData('placed', true);
+                this.checkPuzzleComplete();
             }
+        });
+    }
 
-            // 拖动事件
-            this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-                if (!gameObject.getData('placed')) {
-                    gameObject.x = dragX;
-                    gameObject.y = dragY;
-                }
+        createQuestionTip() {
+        const { width } = this.sys.game.config;
+        // 问号按钮
+        const question = this.add.image(50, 50, 'question').setInteractive();
+        let tipsPage = null;
+
+        question.on('pointerdown', () => {
+            // 创建容器
+            tipsPage = this.add.container(100, 100);
+            tipsPage.setDepth(10);
+
+            // 背景先添加到容器中
+            const bg = this.add.rectangle(0, 0, 600, 400, 0xffffff).setOrigin(0);
+            bg.setStrokeStyle(2, 0x000000);
+            tipsPage.add(bg);
+
+            // 左侧图片
+            const leftX = 50, leftY = 50;
+            ['piece1','piece2','piece3','piece4'].forEach((key, i) => {
+                const img = this.add.image(leftX, leftY + i*90, key)
+                    .setDisplaySize(60,60)
+                    .setOrigin(0);
+                tipsPage.add(img);
             });
 
-            this.input.on('dragend', (pointer, gameObject) => {
-                const targetX = gameObject.getData('correctX');
-                const targetY = gameObject.getData('correctY');
-                const distance = Phaser.Math.Distance.Between(gameObject.x, gameObject.y, targetX, targetY);
-
-                if (distance < 20) {
-                    gameObject.x = targetX;
-                    gameObject.y = targetY;
-                    gameObject.setData('placed', true);
-                    this.checkPuzzleComplete();
-                }
-            });
+        // 辅助函数：每 n 个字符换行
+        function splitByChars(str, n) {
+            const result = [];
+            for (let i = 0; i < str.length; i += n) {
+                result.push(str.substr(i, n));
+            }
+            return result.join('\n');
         }
+
+        const texts = [
+            "\n君：方剂中针对主病或主证起主要治疗作用的药物",
+            "\n臣：一是辅助君药加强治疗主病或主证；二是针对重要的兼病或兼证进行治疗",
+            "\n佐：包括佐助药（协助君、臣药治疗兼证）、佐制药,（减轻或消除君、臣药的毒性或烈性）、反佐药（在病重邪甚时，为防止药物拒药而使用的与君药药性相反但能在治疗中起相成作用的药物）",
+            "\n使:一是引经药，能引导方中其他药物直达病所；二是调和药，可调和方中诸药的性能，使其协同发挥作用",
+        ];
+
+        texts.forEach((textStr, i) => {
+            const text = this.add.text(
+                120,             // X 坐标
+                50 + i * 90,    // Y 坐标，行距稍微加大
+                splitByChars(textStr, 30), // 每30字符换行
+                {
+                    fontSize: '15px',
+                    fill: '#000',
+                    lineSpacing: 6
+                }
+            ).setOrigin(0);
+            tipsPage.add(text);
+        });
+
+        });
+
+        question.on('pointerup', () => {
+            if (tipsPage) {
+                tipsPage.destroy();
+                tipsPage = null;
+            }
+        });
+    }
 
 
     checkPuzzleComplete() {
-        // 加保护，确保 this.pieces 是数组
-        if (!Array.isArray(this.pieces) || this.pieces.length === 0) return;
-
-        const allCorrect = this.pieces.every(piece => piece.getData('placed') === true);
-        if (allCorrect) {
-            if (typeof Dialog === 'undefined') {
-                console.log("Puzzle completed! Dialog not found.");
-                gameState.completedGames.miniGame3 = true;
-                this.scene.start('MiniGame4');
-                return;
-            }
-
+        if (this.pieces.every(p => p.getData('placed'))) {
             const dialog = new Dialog(this);
             dialog.show([
                 "乖孙，此方赠天下人，便是医者本心！",
                 "现在请开始知识问答。"
             ], () => {
+                gameState.completedGames.miniGame3 = true;
                 this.scene.start('MiniGame4');
             });
         }
