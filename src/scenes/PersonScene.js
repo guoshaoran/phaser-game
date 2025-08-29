@@ -4,33 +4,85 @@ class PersonScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.source = data.source || ''; // 传入的人物姓名
+        this.source = data.source || ''; // 人物姓名
     }
 
-    create() {
-        // 设置白色背景
-        this.cameras.main.setBackgroundColor('#ffffff');
+create() {
+    // 白色背景
+    this.cameras.main.setBackgroundColor('#ffffff');
 
-        // 加载并渲染人物信息
-        this.loadAndRenderPerson(this.source);
+    // 返回按钮
+    const backButton = this.add.text(50, 10, '返回', {
+        fontSize: '27px',
+        fill: '#fff',
+        backgroundColor: '#2a3b4d',
+        padding: { x: 10, y: 5 }
+    }).setInteractive();
 
-        // 返回按钮
-        const backButton = this.add.text(50, 30, '返回', {
-            fontSize: '27px',
-            fill: '#fff',
-            backgroundColor: '#2a3b4d',
-            padding: { x: 10, y: 5 }
-        }).setInteractive();
+    backButton.on('pointerdown', () => {
+        this.scene.start('MiniGame4');
+    });
 
-        backButton.on('pointerdown', () => {
-            this.scene.start('MiniGame4');
-        });
+    // 返回按钮高度，用于确定内容开始位置
+    const backButtonBottom = backButton.y + backButton.height + 10; // 10px 间距
+
+    // 创建内容容器，从返回按钮下方开始
+    this.contentContainer = this.add.container(0, backButtonBottom);
+    this.contentStartY = 60; // 容器内部的 Y 起点
+
+    // 滚动控制
+    this.scrollMinY = 0;
+    this.scrollMaxY = 0;
+    this.targetY = 0;
+    this.smoothFactor = 0.1;
+
+    // 鼠标滚轮滚动
+    this.input.on('wheel', (pointer, deltaX, deltaY) => {
+        this.targetY -= deltaY;
+        this.limitScroll();
+    });
+
+    // 拖动滑动
+    this.isDragging = false;
+    this.dragStartY = 0;
+    this.containerStartY = 0;
+
+    this.input.on('pointerdown', pointer => {
+        this.isDragging = true;
+        this.dragStartY = pointer.y;
+        this.containerStartY = this.targetY;
+    });
+
+    this.input.on('pointermove', pointer => {
+        if (this.isDragging) {
+            const delta = pointer.y - this.dragStartY;
+            this.targetY = this.containerStartY + delta;
+            this.limitScroll();
+        }
+    });
+
+    this.input.on('pointerup', () => {
+        this.isDragging = false;
+    });
+
+    // 加载人物信息
+    this.loadAndRenderPerson(this.source);
+}
+
+
+    update() {
+        // 平滑滚动
+        this.contentContainer.y += (this.targetY - this.contentContainer.y) * this.smoothFactor;
+    }
+
+    limitScroll() {
+        if (this.targetY > this.scrollMinY) this.targetY = this.scrollMinY;
+        if (this.targetY < this.scrollMaxY) this.targetY = this.scrollMaxY;
     }
 
     async loadAndRenderPerson(name) {
         const key = '40ccf727947c8660e48118608057a9141efeef1f';
-        const centerX = this.cameras.main.width / 2;
-        let startY = 100;
+        const startX = 50;
 
         let uri = null;
         try {
@@ -39,12 +91,12 @@ class PersonScene extends Phaser.Scene {
             if (searchData.result == 0 && searchData.data.length > 0) {
                 uri = searchData.data[0].uri;
             } else {
-                this.add.text(centerX, startY, '未找到人物 URI', { fontSize: '20px', fill: '#f00' }).setOrigin(0.5, 0);
+                this.addTextLine('未找到人物 URI');
                 return;
             }
         } catch (err) {
             console.error('获取 URI 出错', err);
-            this.add.text(centerX, startY, '获取 URI 出错', { fontSize: '20px', fill: '#f00' }).setOrigin(0.5, 0);
+            this.addTextLine('获取 URI 出错');
             return;
         }
 
@@ -55,32 +107,25 @@ class PersonScene extends Phaser.Scene {
             if (detailData.result == 0) {
                 person = detailData.data;
             } else {
-                this.add.text(centerX, startY, '人物详情为空', { fontSize: '20px', fill: '#f00' }).setOrigin(0.5, 0);
+                this.addTextLine('人物详情为空');
                 return;
             }
         } catch (err) {
             console.error('获取人物详情出错', err);
-            this.add.text(centerX, startY, '获取人物详情出错', { fontSize: '20px', fill: '#f00' }).setOrigin(0.5, 0);
+            this.addTextLine('获取人物详情出错');
             return;
         }
 
-        // 渲染字段
+        // 添加字段
         const addField = (label, value) => {
             if (!value) return;
-            const text = this.add.text(centerX, startY+10, `${label}: ${value}`, {
-                fontSize: '18px',
-                fill: '#000',
-                wordWrap: { width: 800 },
-                align: 'center',
-                lineSpacing: 4
-            }).setOrigin(0.5, 0); // 顶部对齐
-             startY += 30; // 每行间距
-            
+            if (Array.isArray(value)) value = value.join(', ');
+            this.addTextLine(`${label}: ${value}`);
         };
 
         addField('姓名', person.chs_name);
         addField('英文名', person.en_name);
-        addField('异名', person.name?.map(n => n.label).join(', '));
+        addField('异名', person.name?.map(n => n.label));
         addField('出生年', person.birthday);
         addField('死亡年', person.deathday);
         addField('籍贯', person.nativePlace);
@@ -113,12 +158,44 @@ class PersonScene extends Phaser.Scene {
         if (person.img) {
             this.load.image('personImg', person.img);
             this.load.once('complete', () => {
-                const img = this.add.image(centerX, startY, 'personImg');
+                const img = this.add.image(this.cameras.main.width / 2, this.contentStartY, 'personImg');
                 img.setDisplaySize(200, 200);
-                img.setOrigin(0.5, 0); // 顶部对齐
-                startY += 200 + 10; // 图片高度 + 间距
+                img.setOrigin(0.5, 0);
+                this.contentStartY += 200 + 10;
+                // 更新滚动最大值
+                const camHeight = this.cameras.main.height;
+                this.scrollMaxY = Math.min(0, camHeight - this.contentStartY - 60);
             });
             this.load.start();
+        } else {
+            // 更新滚动最大值
+            const camHeight = this.cameras.main.height;
+            this.scrollMaxY = Math.min(0, camHeight - this.contentStartY - 60);
         }
     }
+
+        // 按字符数换行，不依赖字体宽度
+    addTextLine(text, fontSize = 18, color = '#000', charsPerLine = 30) {
+        // 手动拆分文本
+        const lines = [];
+        for (let i = 0; i < text.length; i += charsPerLine) {
+            lines.push(text.substr(i, charsPerLine));
+        }
+
+        // 逐行添加到容器
+        for (const line of lines) {
+            const txt = this.add.text(50, this.contentStartY, line, {
+                fontSize: fontSize + 'px',
+                fill: color,
+                align: 'left'
+            });
+            this.contentContainer.add(txt);
+            this.contentStartY += txt.height + 4; // 行间距
+        }
+
+        // 更新滚动最大值
+        const camHeight = this.cameras.main.height;
+        this.scrollMaxY = Math.min(0, camHeight - this.contentStartY - 60);
+    }
+
 }

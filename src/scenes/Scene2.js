@@ -31,7 +31,7 @@ class Scene2 extends Phaser.Scene {
         this.npc.on('pointerdown', () => {
             const dialog = new Dialog(this);
             dialog.show([
-                "小杏师傅，你来得正好！！沪上药物志》里记载得清清楚楚：‘蟾酥薄切需如蝉翼般",
+                "小杏师傅，你来得正好！！《本草纲目拾遗》里记载得清清楚楚：‘蟾酥薄切需如蝉翼般",
                 "透光，珍珠研磨要似星尘般细腻，薄荷则务必取霜降后叶片，香气最浓’——时间紧迫，",
                 "快按这标准把它们找出来吧！"
             ], () => {
@@ -39,11 +39,27 @@ class Scene2 extends Phaser.Scene {
             });
         });
 
+        const bookImage = this.add.image(300, 350, 'book1')
+        .setScale(1.5)
+        .setInteractive({ useHandCursor: true });
+
+        bookImage.on('pointerdown', () => {
+            this.scene.start('BookScene', {
+                source: "本草纲目拾遗",
+                fromScene: this.scene.key
+            });
+        });
         // 添加提示文本
         this.add.text(
             450,
             350 ,
             '点击NPC',
+            { fontSize: '16px', fill: '#fff', backgroundColor: '#000' }
+        ).setOrigin(0.5);
+        this.add.text(
+            300,
+            300 ,
+            '点击图书查看详情',
             { fontSize: '16px', fill: '#fff', backgroundColor: '#000' }
         ).setOrigin(0.5);
     }

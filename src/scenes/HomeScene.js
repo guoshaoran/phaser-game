@@ -4,11 +4,11 @@ class HomeScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.source = data.source || ''; // 家谱名
+        this.source = data.source || '';
+        this.fromScene = data.fromScene || 'MiniGame4';
     }
 
     create() {
-        // 设置白色背景
         this.cameras.main.setBackgroundColor('#ffffff');
 
         // 返回按钮
@@ -20,38 +20,86 @@ class HomeScene extends Phaser.Scene {
         }).setInteractive();
 
         backButton.on('pointerdown', () => {
-            this.scene.start('MiniGame4');
+            this.scene.start(this.fromScene, { source: this.source });
+        });
+
+        // 返回按钮底部坐标
+        const startY = backButton.y + backButton.height + 10;
+
+        // 创建内容容器
+        this.contentContainer = this.add.container(0, 60);
+        this.contentStartY = 60;
+
+        // 滚动控制变量
+        this.scrollMinY = 0;
+        this.scrollMaxY = 0;
+        this.targetY = 0;
+        this.smoothFactor = 0.1;
+
+        // 鼠标滚轮事件
+        this.input.on('wheel', (pointer, deltaX, deltaY) => {
+            this.targetY -= deltaY;
+            this.limitScroll();
+        });
+
+        // 拖动滑动
+        this.isDragging = false;
+        this.dragStartY = 0;
+        this.containerStartY = 0;
+
+        this.input.on('pointerdown', pointer => {
+            this.isDragging = true;
+            this.dragStartY = pointer.y;
+            this.containerStartY = this.targetY;
+        });
+
+        this.input.on('pointermove', pointer => {
+            if (this.isDragging) {
+                const delta = pointer.y - this.dragStartY;
+                this.targetY = this.containerStartY + delta;
+                this.limitScroll();
+            }
+        });
+
+        this.input.on('pointerup', () => {
+            this.isDragging = false;
         });
 
         // 加载家谱人物
         this.loadWorkPersons(this.source);
     }
 
+    update() {
+        // 平滑滚动
+        this.contentContainer.y += (this.targetY - this.contentContainer.y) * this.smoothFactor;
+    }
+
+    limitScroll() {
+        if (this.targetY > this.scrollMinY) this.targetY = this.scrollMinY;
+        if (this.targetY < this.scrollMaxY) this.targetY = this.scrollMaxY;
+    }
+
     async loadWorkPersons(workName) {
         const key = "40ccf727947c8660e48118608057a9141efeef1f";
-        const centerX = this.cameras.main.width / 2; // 水平居中
-        let startY = 100;
-
+        const startX = 50; // 左对齐
         try {
-            // 1️⃣ 获取作品相关人物 URI 列表
-            const workRes = await fetch(`https://data1.library.sh.cn/jp/work/data?${encodeURIComponent(workName)}&key=${key}`);
+            // 获取作品相关人物 URI 列表
+            const workRes = await fetch(
+                `https://data1.library.sh.cn/jp/work/data?${encodeURIComponent(workName)}&key=${key}`
+            );
             const Data = await workRes.json();
             const workData = Data["@graph"];
 
             if (!workData || workData.length === 0) {
-                this.add.text(centerX, startY, `未找到《${workName}》相关人物`, { 
-                    fontSize: '20px', fill: '#f00', align: 'center', wordWrap: { width: 800 } 
-                }).setOrigin(0.5);
+                this.addTextLine(`未找到《${workName}》相关人物`);
                 return;
             }
 
-            this.add.text(centerX, startY+10, `《${workName}》相关人物：`, { 
-                fontSize: '22px', fill: '#000', align: 'center', wordWrap: { width: 800 } 
-            }).setOrigin(0.5,0);
-            startY += 40;
+            // 标题
+            this.addTextLine(`《${workName}》相关人物(100人)：`, 22, '#000');
 
-            // 2️⃣ 遍历每个 URI 调人物详情接口
-            for (let item of workData.slice(0, 10)) {
+            // 遍历人物
+            for (let item of workData.slice(0, 100)) {
                 const personUri = item["@id"];
                 if (!personUri) continue;
 
@@ -62,30 +110,46 @@ class HomeScene extends Phaser.Scene {
                     const detailData = await detailRes.json();
 
                     if (detailData && detailData.data && detailData.data.chs_name) {
-                        const name = detailData.data.chs_name;
-
-                        // 显示人物名，水平居中
-                        this.add.text(centerX, startY+10, name, {
-                            fontSize: '18px',
-                            fill: '#000',
-                            align: 'center',
-                            wordWrap: { width: 800 }
-                        }).setOrigin(0.5);
-                        startY += 30; // 每行间距
+                        this.addTextLine(detailData.data.chs_name, 18, '#000');
                     }
                 } catch (err) {
                     console.error("获取人物详情出错:", err);
-                    this.add.text(centerX, startY, '人物详情加载失败', { 
-                        fontSize: '18px', fill: '#f00', align: 'center', wordWrap: { width: 800 } 
-                    }).setOrigin(0.5);
-                    startY += 30;
+                    this.addTextLine('人物详情加载失败', 18, '#f00');
                 }
             }
+
+            // 计算滚动最大值
+            const camHeight = this.cameras.main.height;
+            this.scrollMaxY = Math.min(0, camHeight - this.contentStartY - 60);
+
         } catch (err) {
             console.error("获取作品数据出错:", err);
-            this.add.text(centerX, startY, '作品数据加载失败', { 
-                fontSize: '20px', fill: '#f00', align: 'center', wordWrap: { width: 800 } 
-            }).setOrigin(0.5);
+            this.addTextLine('作品数据加载失败', 20, '#f00');
         }
     }
+
+    // 添加左对齐文本到容器
+        addTextLine(text, fontSize = 18, color = '#000') {
+            const maxChars = 30;
+            const lines = [];
+
+            for (let i = 0; i < text.length; i += maxChars) {
+                lines.push(text.slice(i, i + maxChars));
+            }
+
+            lines.forEach(line => {
+                const txt = this.add.text(50, this.contentStartY, line, {
+                    fontSize: `${fontSize}px`,
+                    fill: color,
+                    align: 'left'
+                });
+                this.contentContainer.add(txt);
+                this.contentStartY += txt.height + 4;
+            });
+
+            // 更新滚动最大值
+            const camHeight = this.cameras.main.height;
+            this.scrollMaxY = Math.min(0, camHeight - this.contentStartY - this.contentContainer.y);
+        }
+
 }

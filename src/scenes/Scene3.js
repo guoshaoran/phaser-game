@@ -34,17 +34,34 @@ class Scene3 extends Phaser.Scene {
             dialog.show([
                 "小杏！你来得太是时候了。疫情蔓延，正需要这辟疫香囊！！",
                 "但切记，香囊需麝香、薄荷、陈皮三味主药才能起效！如今市面混乱，麝香多有掺假",
-                "据《上海中药炮制规范》记载，真麝香囊孔细密如金粟！快，用这面鉴药镜照看分明！",
+                "据《本草备要》记载，真麝香囊孔细密如金粟！快，用这面鉴药镜照看分明！",
             ], () => {
                 this.scene.start('MiniGame2');
             });
         });
 
+         const bookImage = this.add.image(600, 350, 'book1')
+        .setScale(1.5)
+        .setInteractive({ useHandCursor: true });
+
+        bookImage.on('pointerdown', () => {
+            this.scene.start('BookScene', {
+                source: "本草备要",
+                fromScene: this.scene.key
+            });
+        });
         // 添加提示文本
         this.add.text(
             600,
             400,
             '点击NPC',
+            { fontSize: '16px', fill: '#fff', backgroundColor: '#000' }
+        ).setOrigin(0.5);
+
+        this.add.text(
+            600,
+            300 ,
+            '点击图书查看详情',
             { fontSize: '16px', fill: '#fff', backgroundColor: '#000' }
         ).setOrigin(0.5);
     }

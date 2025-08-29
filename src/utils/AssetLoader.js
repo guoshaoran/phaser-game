@@ -16,6 +16,7 @@ class AssetLoader {
 
         scene.load.image('line', 'assets/images/line.png');
         scene.load.image('book', 'assets/images/book.png');
+        scene.load.image('book1', 'assets/images/book1.png');
 
         scene.load.image('npc', 'assets/images/npc.png');
         scene.load.image('npc1', 'assets/images/npc1.png');
@@ -41,7 +42,6 @@ class AssetLoader {
         scene.load.image('piece4', 'assets/images/piece4.png');
         scene.load.image('question', 'assets/images/question.png'); 
 
-        //scene.load.json('questionBank', 'assets/data/questionBank.json');
         scene.load.json('question', 'assets/data/question.json');
     }
 }
